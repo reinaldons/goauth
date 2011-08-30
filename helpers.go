@@ -72,13 +72,13 @@ func parseParams(body string) map[string]string {
     if body == "" { return p }
     var pairs []string
     if strings.LastIndex(body, "&") > 0 {
-        pairs = strings.Split(body, "&", -1)
+        pairs = strings.Split(body, "&")
     } else {
         pairs = []string{body}
     }
     for _, pair := range pairs {
         if strings.LastIndex(pair, "=") > 0 {
-            kv := strings.Split(pair, "=", 2)
+            kv := strings.SplitN(pair, "=", 2)
             p[kv[0]] = kv[1]
         } else {
             p[pair] = ""

@@ -2,7 +2,6 @@ package oauth
 
 import (
     "bufio"
-    //"bytes"
     "crypto/tls"
     "net"
     "fmt"
@@ -70,7 +69,7 @@ func send(req *http.Request) (resp *http.Response, err os.Error) {
     }
 
     reader := bufio.NewReader(conn)
-    resp, err = http.ReadResponse(reader, req.Method)
+    resp, err = http.ReadResponse(reader, req)
     if err != nil {
         conn.Close()
         return nil, err
