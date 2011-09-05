@@ -94,14 +94,8 @@ func post(url_ string, body io.ReadCloser, oauthHeaders map[string]string) (r *h
 	req.TransferEncoding = []string{"chunked"}
 	req.Body = body
 
-	first := true
 	for k, v := range oauthHeaders {
-		if first {
-			first = false
-		} else {
-			req.Header["Authorization"][0] += ",\n    "
-		}
-		req.Header["Authorization"][0] += k + "=\"" + v + "\""
+		req.Header[k] = []string{v}
 	}
 
 	req.URL, err = url.Parse(url_)
