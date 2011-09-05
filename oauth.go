@@ -119,7 +119,7 @@ func (o *OAuth) makeRequest(method, url string, body string, oParams map[string]
 	switch method {
 	case "POST":
 		cb := ClosingBuffer{bytes.NewBufferString(body)}
-		resp, err = post(addQueryParams(url, params), cb, oParams)
+		resp, err = post(url, cb, oParams, params)
 	case "GET":
 		resp, err = get(addQueryParams(url, params), oParams)
 	default:

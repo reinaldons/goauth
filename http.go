@@ -82,7 +82,7 @@ func send(req *http.Request) (resp *http.Response, err os.Error) {
 	return
 }
 
-func post(url_ string, body io.ReadCloser, oauthHeaders map[string]string) (r *http.Response, err os.Error) {
+func post(url_ string, body io.ReadCloser, oauthHeaders map[string]string, headers map[string]string) (r *http.Response, err os.Error) {
 	var req http.Request
 	req.Method = "POST"
 	req.ProtoMajor = 1
@@ -94,7 +94,17 @@ func post(url_ string, body io.ReadCloser, oauthHeaders map[string]string) (r *h
 	//req.TransferEncoding = []string{"chunked"}
 	req.Body = body
 
+	first := true
 	for k, v := range oauthHeaders {
+                if first {
+                        first = false
+                } else {
+                        req.Header["Authorization"][0] += ",\n    "
+                }
+                req.Header["Authorization"][0] += k + "=\"" + v + "\""
+        }
+
+	for k, v := range headers {
 		req.Header[k] = []string{v}
 	}
 
