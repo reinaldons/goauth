@@ -91,7 +91,7 @@ func post(url_ string, body io.ReadCloser, oauthHeaders map[string]string) (r *h
 	req.Header = map[string][]string{
 		"Authorization": {"OAuth "},
 	}
-	req.TransferEncoding = []string{"chunked"}
+	//req.TransferEncoding = []string{"chunked"}
 	req.Body = body
 
 	for k, v := range oauthHeaders {
