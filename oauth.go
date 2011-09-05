@@ -51,8 +51,8 @@ type OAuth struct {
 
 	userName     string
 	userId       uint
-	accessToken  string
-	accessSecret string
+	AccessToken  string
+	AccessSecret string
 }
 
 // An empty map[string]string.
@@ -60,7 +60,7 @@ type OAuth struct {
 var None map[string]string
 
 func (o *OAuth) Authorized() bool {
-	if o.accessToken != "" && o.accessSecret != "" {
+	if o.AccessToken != "" && o.AccessSecret != "" {
 		return true
 	}
 	return false
@@ -192,8 +192,8 @@ func (o *OAuth) parseResponse(status int, body io.Reader, requestType int) os.Er
 			return &callbackError{o.Callback}
 		}
 	case TokenReq:
-		o.accessToken = params["oauth_token"]
-		o.accessSecret = params["oauth_token_secret"]
+		o.AccessToken = params["oauth_token"]
+		o.AccessSecret = params["oauth_token_secret"]
 		o.userId, _ = strconv.Atoui(params["user_id"])
 		o.userName = params["screen_name"]
 	default:
@@ -213,7 +213,7 @@ func (o *OAuth) params() (p map[string]string) {
 	p["oauth_nonce"] = nonce()
 	p["oauth_version"] = OAUTH_VERSION
 	if o.Authorized() {
-		p["oauth_token"] = o.accessToken
+		p["oauth_token"] = o.AccessToken
 	}
 	return
 }
@@ -255,8 +255,8 @@ func nonce() string {
 // This could probably seem like less of a hack...
 func (o *OAuth) signingKey() string {
 	key := o.ConsumerSecret + "&"
-	if o.accessSecret != "" {
-		key += o.accessSecret
+	if o.AccessSecret != "" {
+		key += o.AccessSecret
 	} else if o.requestSecret != "" {
 		key += o.requestSecret
 	}
