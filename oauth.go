@@ -106,6 +106,7 @@ func (o *OAuth) GetRequestToken() (err os.Error) {
 // Makes an HTTP request, handling all the repetitive OAuth overhead.
 func (o *OAuth) makeRequest(method, url string, body string, oParams map[string]string, params map[string]string) (resp *http.Response, err os.Error) {
 	escapeParams(oParams)
+	header := params
 	escapeParams(params)
 
 	allParams := mergeParams(oParams, params)
@@ -119,7 +120,7 @@ func (o *OAuth) makeRequest(method, url string, body string, oParams map[string]
 	switch method {
 	case "POST":
 		cb := ClosingBuffer{bytes.NewBufferString(body)}
-		resp, err = post(url, cb, oParams, params)
+		resp, err = post(url, cb, oParams, header)
 	case "GET":
 		resp, err = get(addQueryParams(url, params), oParams)
 	default:
