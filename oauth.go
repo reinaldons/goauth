@@ -284,7 +284,7 @@ func timestamp() string {
 	return strconv.Itoa64(time.Seconds())
 }
 
-func (o *OAuth) Post(url string, body string, params map[string]string) (r *http.Response, err os.Error) {
+func (o *OAuth) Post(url string, body string, params map[string]string, header map[string]string) (r *http.Response, err os.Error) {
 	if !o.Authorized() {
 		return nil, &danceError{
 			What:  "Not authorized",
@@ -293,7 +293,7 @@ func (o *OAuth) Post(url string, body string, params map[string]string) (r *http
 	}
 
 	oParams := o.params()
-	r, err = o.makeRequest("POST", url, body, oParams, params)
+	r, err = o.makeRequest("POST", url, body, mergeParams(oParams, params), header)
 	return
 }
 
