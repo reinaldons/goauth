@@ -37,9 +37,9 @@ func hasPort(s string) bool {
 }
 
 func send(req *http.Request) (resp *http.Response, err os.Error) {
-	//dump, _ := http.DumpRequest(req, true)
-	//fmt.Fprintf(os.Stderr, "%s", dump)
-	//fmt.Fprintf(os.Stderr, "\n--- body:\n%s\n---", bodyString(req.Body))
+	dump, _ := http.DumpRequest(req, true)
+	fmt.Fprintf(os.Stderr, "%s", dump)
+	fmt.Fprintf(os.Stderr, "\n--- body:\n%s\n---", bodyString(req.Body))
 	if req.URL.Scheme != "http" && req.URL.Scheme != "https" {
 		return nil, &badStringError{"unsupported protocol scheme", req.URL.Scheme}
 	}
