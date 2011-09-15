@@ -70,13 +70,13 @@
     boundary := fmt.Sprintf("mandic.gomda.%d", time.Nanoseconds())
     
     body := `--[--boundary--]
-Content-Disposition: form-data; name="file"; filename="[--filename--]"
-Content-type: text/plain
-
-[--content--]
---[--boundary--]--
-
-`
+    Content-Disposition: form-data; name="file"; filename="[--filename--]"
+    Content-type: text/plain
+    
+    [--content--]
+    --[--boundary--]--
+    
+    `
     
     body = strings.Replace(body, "[--boundary--]", boundary, 2)
     body = strings.Replace(body, "[--filename--]", filename, 1)
