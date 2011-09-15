@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"strconv"
 	"url"
 )
 
@@ -37,9 +38,9 @@ func hasPort(s string) bool {
 }
 
 func send(req *http.Request) (resp *http.Response, err os.Error) {
-	dump, _ := http.DumpRequest(req, true)
-	fmt.Fprintf(os.Stderr, "%s", dump)
-	fmt.Fprintf(os.Stderr, "\n--- body:\n%s\n---", bodyString(req.Body))
+	//dump, _ := http.DumpRequest(req, true)
+	//fmt.Fprintf(os.Stderr, "%s", dump)
+	//fmt.Fprintf(os.Stderr, "\n--- body:\n%s\n---", bodyString(req.Body))
 	if req.URL.Scheme != "http" && req.URL.Scheme != "https" {
 		return nil, &badStringError{"unsupported protocol scheme", req.URL.Scheme}
 	}
@@ -91,7 +92,11 @@ func post(url_ string, body io.ReadCloser, oauthHeaders map[string]string, heade
 	req.Header = map[string][]string{
 		"Authorization": {"OAuth "},
 	}
-	//req.TransferEncoding = []string{"chunked"}
+	req.TransferEncoding = []string{"chunked"}
+	if "" != headers["Content-Length"] {
+		req.TransferEncoding = []string{""}
+		req.ContentLength, err = strconv.Atoi64(headers["Content-Length"])
+	}
 	req.Body = body
 
 	first := true

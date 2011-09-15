@@ -95,7 +95,7 @@ func (o *OAuth) GetRequestToken() (err os.Error) {
 
 	allParams := mergeParams(oParams, o.RequestTokenParams)
 
-	resp, err := o.makeRequest("POST", o.RequestTokenURL, "", allParams, None)
+	resp, err := o.makeRequest("POST", o.RequestTokenURL, "", allParams, None, None)
 	if err != nil {
 		return
 	}
@@ -104,25 +104,24 @@ func (o *OAuth) GetRequestToken() (err os.Error) {
 }
 
 // Makes an HTTP request, handling all the repetitive OAuth overhead.
-func (o *OAuth) makeRequest(method, url string, body string, oParams map[string]string, params map[string]string) (resp *http.Response, err os.Error) {
-	escapeParams(oParams)
-	header := params
-	escapeParams(params)
+func (o *OAuth) makeRequest(method, url string, body string, oauthParams map[string]string, getParams map[string]string, header map[string]string) (resp *http.Response, err os.Error) {
+	escapeParams(oauthParams)
+	escapeParams(getParams)
 
-	allParams := mergeParams(oParams, params)
+	allParams := mergeParams(oauthParams, getParams)
 	signature, err := o.sign(baseString(method, url, allParams))
 	if err != nil {
 		return
 	}
 
-	oParams["oauth_signature"] = PercentEncode(signature)
+	oauthParams["oauth_signature"] = PercentEncode(signature)
 
 	switch method {
 	case "POST":
 		cb := ClosingBuffer{bytes.NewBufferString(body)}
-		resp, err = post(url, cb, oParams, header)
+		resp, err = post(addQueryParams(url, getParams), cb, oauthParams, header)
 	case "GET":
-		resp, err = get(addQueryParams(url, params), oParams)
+		resp, err = get(addQueryParams(url, getParams), oauthParams)
 	default:
 		return nil, &implementationError{
 			What:  fmt.Sprintf("HTTP method (%s)", method),
@@ -160,7 +159,7 @@ func (o *OAuth) GetAccessToken(verifier string) (err os.Error) {
 	params := o.params()
 	params["oauth_token"] = o.requestToken
 	params["oauth_verifier"] = verifier
-	resp, err := o.makeRequest("POST", o.AccessTokenURL, "", params, None)
+	resp, err := o.makeRequest("POST", o.AccessTokenURL, "", params, None, None)
 	if err != nil {
 		return
 	}
@@ -250,7 +249,8 @@ func baseString(method, url string, params map[string]string) string {
 
 // For oauth_nonce (if that wasn't obvious).
 func nonce() string {
-	return strconv.Itoa64(rand.Int63())
+	r := rand.New(rand.NewSource(time.Nanoseconds()))
+	return strconv.Itoa64(r.Int63())
 }
 
 // This could probably seem like less of a hack...
@@ -266,6 +266,7 @@ func (o *OAuth) signingKey() string {
 
 func (o *OAuth) sign(request string) (string, os.Error) {
 	key := o.signingKey()
+	
 	switch o.SignatureMethod {
 	case HMAC_SHA1:
 		hash := hmac.NewSHA1([]byte(key))
@@ -285,7 +286,7 @@ func timestamp() string {
 	return strconv.Itoa64(time.Seconds())
 }
 
-func (o *OAuth) Post(url string, body string, params map[string]string, header map[string]string) (r *http.Response, err os.Error) {
+func (o *OAuth) Post(url string, body string, get map[string]string, header map[string]string) (r *http.Response, err os.Error) {
 	if !o.Authorized() {
 		return nil, &danceError{
 			What:  "Not authorized",
@@ -293,8 +294,8 @@ func (o *OAuth) Post(url string, body string, params map[string]string, header m
 		}
 	}
 
-	oParams := o.params()
-	r, err = o.makeRequest("POST", url, body, mergeParams(oParams, params), header)
+	oauthParams := o.params()
+	r, err = o.makeRequest("POST", url, body, oauthParams, get, header)
 	return
 }
 
@@ -306,7 +307,7 @@ func (o *OAuth) Get(url string, params map[string]string) (r *http.Response, err
 		}
 	}
 
-	oParams := o.params()
-	r, err = o.makeRequest("GET", url, "", oParams, params)
+	oauthParams := o.params()
+	r, err = o.makeRequest("GET", url, "", oauthParams, params, None)
 	return
 }
