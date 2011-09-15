@@ -57,7 +57,7 @@
 
     get := make(map[string]string)
     header := make(map[string]string)
-    response, err := o.Post(fmt.Sprintf("%s/account/info", apiUrl), "", get, header)
+    response, err := o.Post("http://api.dropbox.com/0/account/info", "", get, header)
     if err != nil {
             fmt.Println("AccountInfo fail: ", err)
             return
@@ -67,43 +67,45 @@
 
 # Upload file
 
-    boundary := fmt.Sprintf("mandic.gomda.%d", time.Nanoseconds())
-    
-    body := `--[--boundary--]
-    Content-Disposition: form-data; name="file"; filename="[--filename--]"
-    Content-type: text/plain
-    
-    [--content--]
-    --[--boundary--]--
-    
-    `
-    
-    body = strings.Replace(body, "[--boundary--]", boundary, 2)
-    body = strings.Replace(body, "[--filename--]", filename, 1)
-    body = strings.Replace(body, "[--content--]", content, 1)
-    
-    get := make(map[string]string)
-    get["file"] = filename
-    header := make(map[string]string)
-    header["User-Agent"] = "Mandic Dropbox"
-    header["Content-Length"] = fmt.Sprintf("%d", len(body))
-    header["Content-Type"] = fmt.Sprintf("multipart/form-data; boundary=%s", boundary)
-    
-    o := new(oauth.OAuth)
-    o.ConsumerKey = "app key"
-    o.ConsumerSecret = "app secret"
-    o.SignatureMethod = "HMAC-SHA1"
-    
-    o.AccessToken = "user access token"
-    o.AccessSecret = "user access secret"
-    
-    response, err := o.Post(fmt.Sprintf("%s/%s/%s", filesUrl, d.root, path), body, get, header)
-    if err != nil {
-            fmt.Println("UploadFile fail: ", err)
-            return
+    func UploadFile(path string, filename string, content string) {
+        boundary := fmt.Sprintf("mandic.gomda.%d", time.Nanoseconds())
+        
+        body := `--[--boundary--]
+        Content-Disposition: form-data; name="file"; filename="[--filename--]"
+        Content-type: text/plain
+        
+        [--content--]
+        --[--boundary--]--
+        
+        `
+        
+        body = strings.Replace(body, "[--boundary--]", boundary, 2)
+        body = strings.Replace(body, "[--filename--]", filename, 1)
+        body = strings.Replace(body, "[--content--]", content, 1)
+        
+        get := make(map[string]string)
+        get["file"] = filename
+        header := make(map[string]string)
+        header["User-Agent"] = "Mandic Dropbox"
+        header["Content-Length"] = fmt.Sprintf("%d", len(body))
+        header["Content-Type"] = fmt.Sprintf("multipart/form-data; boundary=%s", boundary)
+        
+        o := new(oauth.OAuth)
+        o.ConsumerKey = "app key"
+        o.ConsumerSecret = "app secret"
+        o.SignatureMethod = "HMAC-SHA1"
+        
+        o.AccessToken = "user access token"
+        o.AccessSecret = "user access secret"
+        
+        response, err := o.Post(fmt.Sprintf("http://api-content.dropbox.com/0/files/dropbox/%s", path), body, get, header)
+        if err != nil {
+                fmt.Println("UploadFile fail: ", err)
+                return
+        }
+        
+        fmt.Println("Response Body: ", bodyString(response.Body))
     }
-    
-    fmt.Println("Response Body: ", bodyString(response.Body))
 
 # Status
 
