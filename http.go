@@ -3,14 +3,13 @@ package oauth
 import (
 	"bufio"
 	"crypto/tls"
-	"net"
 	"fmt"
-	"http"
 	"io"
-	"os"
-	"strings"
+	"net"
+	"net/http"
+	"net/url"
 	"strconv"
-	"url"
+	"strings"
 )
 
 type badStringError struct {
@@ -18,7 +17,7 @@ type badStringError struct {
 	str  string
 }
 
-func (e *badStringError) String() string {
+func (e *badStringError) Error() string {
 	return fmt.Sprintf("%s %q", e.what, e.str)
 }
 
@@ -31,13 +30,13 @@ type nopCloser struct {
 	io.Reader
 }
 
-func (nopCloser) Close() os.Error { return nil }
+func (nopCloser) Close() error { return nil }
 
 func hasPort(s string) bool {
 	return strings.LastIndex(s, ":") > strings.LastIndex(s, "]")
 }
 
-func send(req *http.Request) (resp *http.Response, err os.Error) {
+func send(req *http.Request) (resp *http.Response, err error) {
 	//dump, _ := http.DumpRequest(req, true)
 	//fmt.Fprintf(os.Stderr, "%s", dump)
 	//fmt.Fprintf(os.Stderr, "\n--- body:\n%s\n---", bodyString(req.Body))
@@ -83,7 +82,7 @@ func send(req *http.Request) (resp *http.Response, err os.Error) {
 	return
 }
 
-func post(url_ string, body io.ReadCloser, oauthHeaders map[string]string, headers map[string]string) (r *http.Response, err os.Error) {
+func post(url_ string, body io.ReadCloser, oauthHeaders map[string]string, headers map[string]string) (r *http.Response, err error) {
 	var req http.Request
 	req.Method = "POST"
 	req.ProtoMajor = 1
@@ -95,19 +94,19 @@ func post(url_ string, body io.ReadCloser, oauthHeaders map[string]string, heade
 	req.TransferEncoding = []string{"chunked"}
 	if "" != headers["Content-Length"] {
 		req.TransferEncoding = []string{""}
-		req.ContentLength, err = strconv.Atoi64(headers["Content-Length"])
+		req.ContentLength, err = strconv.ParseInt(headers["Content-Length"], 10, 64)
 	}
 	req.Body = body
 
 	first := true
 	for k, v := range oauthHeaders {
-                if first {
-                        first = false
-                } else {
-                        req.Header["Authorization"][0] += ",\n    "
-                }
-                req.Header["Authorization"][0] += k + "=\"" + v + "\""
-        }
+		if first {
+			first = false
+		} else {
+			req.Header["Authorization"][0] += ",\n    "
+		}
+		req.Header["Authorization"][0] += k + "=\"" + v + "\""
+	}
 
 	for k, v := range headers {
 		req.Header[k] = []string{v}
@@ -121,7 +120,7 @@ func post(url_ string, body io.ReadCloser, oauthHeaders map[string]string, heade
 	return send(&req)
 }
 
-func get(url_ string, oauthHeaders map[string]string) (r *http.Response, err os.Error) {
+func get(url_ string, oauthHeaders map[string]string) (r *http.Response, err error) {
 	var req http.Request
 	req.Method = "GET"
 	req.ProtoMajor = 1
